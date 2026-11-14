@@ -1,0 +1,122 @@
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 no-print">
+    <div class="bg-emerald-900 text-white rounded-2xl p-5 shadow-md">
+        <div class="text-xs text-emerald-300 font-semibold uppercase">Ahorro Proyectado (Mensual)</div>
+        <div class="text-2xl font-bold mt-1">{{ total_co2_mes|floatformat:2 }} kg CO₂e</div>
+        <div class="text-xs text-emerald-200 mt-1">Equivalente a {{ toneladas_co2_mes|floatformat:3 }} tCO₂e</div>
+    </div>
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <div class="text-xs text-slate-400 font-semibold uppercase">Alimento Aprovechado</div>
+        <div class="text-2xl font-bold text-slate-800 mt-1">{{ total_peso_mes|floatformat:1 }} kg</div>
+        <div class="text-xs text-emerald-700 font-medium mt-1">🍽️ ~{{ personas_alimentadas }} raciones servidas</div>
+    </div>
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <div class="text-xs text-slate-400 font-semibold uppercase">Equivalencia Ecológica</div>
+        <div class="text-2xl font-bold text-teal-700 mt-1">🌳 {{ arboles_equiv }} árboles</div>
+        <div class="text-xs text-slate-500 mt-1">🚗 {{ km_auto_evitados|floatformat:0 }} km en auto evitados</div>
+    </div>
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <div class="text-xs text-slate-400 font-semibold uppercase">Valor Ambiental Referencia</div>
+        <div class="text-2xl font-bold text-amber-600 mt-1">${{ valor_bono_mxn|floatformat:2 }} MXN</div>
+        <div class="text-xs text-slate-500 mt-1">Mercado voluntario de carbono</div>
+    </div>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border-2 border-emerald-700/30 p-8 print-card">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-6 mb-6">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-800 text-white flex items-center justify-center text-3xl shadow">
+                🌱
+            </div>
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">Constancia de Impacto Ambiental y Social (ESG)</span>
+                <h2 class="text-2xl font-bold text-slate-900">{{ empresa_principal }}</h2>
+                <p class="text-xs text-slate-500">Emitido por: Plataforma Rescate CO₂e — Banco de Alimentos de Veracruz</p>
+            </div>
+        </div>
+        <div class="mt-4 md:mt-0 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-right">
+            <div class="text-xs text-emerald-800 font-medium">Impacto de tu donación:</div>
+            <div class="text-lg font-bold text-emerald-900">"Gracias a tu donación evitarás {{ total_co2_mes|floatformat:2 }} kg de CO₂e"</div>
+            <div class="text-[11px] text-emerald-700">Fecha de proyección: {{ fecha_actual|date:"Y-m-d" }}</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div class="lg:col-span-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Desglose de alimentos proyectados para donación</h4>
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
+                        <th class="py-2.5 px-3">Categoría</th>
+                        <th class="py-2.5 px-3">Peso/Entrega</th>
+                        <th class="py-2.5 px-3">Frecuencia</th>
+                        <th class="py-2.5 px-3">Peso Mensual</th>
+                        <th class="py-2.5 px-3">CO₂e Ahorrado</th>
+                        <th class="py-2.5 px-3 no-print"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for s in simulaciones %}
+                    <tr>
+                        <td class="py-2.5 px-3 font-medium">{{ s.categoria.categoria }}</td>
+                        <td class="py-2.5 px-3">{{ s.peso_kg }} kg</td>
+                        <td class="py-2.5 px-3 text-xs">{{ s.get_frecuencia_display }}</td>
+                        <td class="py-2.5 px-3 font-medium">{{ s.peso_proyectado_kg|floatformat:1 }} kg</td>
+                        <td class="py-2.5 px-3 font-bold text-emerald-700">{{ s.co2_evitado_proyectado|floatformat:2 }} kg CO₂e</td>
+                        <td class="py-2.5 px-3 text-right no-print">
+                            <button hx-delete="/simulador-eliminar/{{ s.id }}/"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    hx-target="#contenedor-simulador"
+                                    class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">✕</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-6 text-center text-slate-400">
+                            Agrega uno o varios alimentos en el simulador superior para calcular tu ahorro de CO₂e y generar tu constancia.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col justify-between">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 text-center">Distribución de CO₂e Evitado</h4>
+            <div class="h-48">
+                <canvas id="graficaSimulador"></canvas>
+            </div>
+            <p class="text-[11px] text-slate-500 text-center mt-2">
+                Cálculo respaldado por factores IPCC, EPA WARM y metodología Verra VM0046.
+            </p>
+        </div>
+    </div>
+
+    <div class="border-t border-slate-200 pt-4 flex flex-col md:flex-row justify-between text-xs text-slate-500">
+        <div><strong>Metodología:</strong> Desvío de residuos orgánicos de relleno sanitario (evitando emisiones de metano CH₄ y CO₂).</div>
+        <div><strong>Folio de Pre-Verificación MRV:</strong> SIM-{{ fecha_actual|date:"Ymd" }}-UV</div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const datosSim = {{ datos_grafica_sim|safe }};
+        const canvas = document.getElementById('graficaSimulador');
+        if (canvas && datosSim.etiquetas.length > 0) {
+            new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: datosSim.etiquetas,
+                    datasets: [{
+                        data: datosSim.valores,
+                        backgroundColor: ['#047857', '#10b981', '#f59e0b', '#0d9488', '#3b82f6', '#8b5cf6', '#64748b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+                }
+            });
+        }
+    })();
+</script>

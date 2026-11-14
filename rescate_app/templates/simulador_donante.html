@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 no-print">
+    <div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900">Portal de Empresas Donantes</span>
+        <h1 class="text-2xl font-bold text-slate-900 mt-1">Simulador de Ahorro de CO₂e y Generador de Constancia</h1>
+        <p class="text-sm text-slate-500">Calcula cuánto CO₂e evitará tu negocio al donar sus excedentes y descarga tu reporte de impacto ESG</p>
+    </div>
+    <div class="flex gap-2">
+        <button onclick="window.print()" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-semibold shadow-sm transition cursor-pointer">
+            🖨️ Generar Reporte PDF de Donante
+        </button>
+    </div>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 no-print">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-semibold text-slate-800">Simular aportación de alimentos</h3>
+        <button hx-post="/simulador-limpiar/" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-target="#contenedor-simulador"
+                class="text-xs text-red-600 hover:underline font-medium cursor-pointer">
+            Limpiar simulación actual
+        </button>
+    </div>
+    <form hx-post="/simulador-agregar/" hx-target="#contenedor-simulador">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre de tu Empresa / Negocio</label>
+                <input type="text" name="empresa" value="{{ empresa_principal }}" required
+                       class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de alimento a donar</label>
+                <select name="categoria" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id }}">{{ cat.categoria }} ({{ cat.factor_kg_co2_por_kg }} kg CO₂e/kg)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Cantidad estimada por entrega (kg)</label>
+                <input type="number" step="0.5" min="1" name="peso_kg" placeholder="Ej. 80" required
+                       class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Frecuencia de donación</label>
+                <select name="frecuencia" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+                    <option value="Unica">Entrega Única</option>
+                    <option value="Diaria">Diariamente (x30 al mes)</option>
+                    <option value="Semanal">Semanalmente (x4 al mes)</option>
+                    <option value="Quincenal">Quincenalmente (x2 al mes)</option>
+                    <option value="Mensual">Mensualmente (x1 al mes)</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <button type="submit" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold rounded-xl text-sm shadow-sm transition cursor-pointer">
+                ⚡ Calcular y agregar al reporte de donación
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="contenedor-simulador">
+    {% include 'partials/panel_simulador.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-900">Registro de alimento rescatado</h1>
+        <p class="text-sm text-slate-500">Captura categorizada del tipo y peso del alimento con cálculo instantáneo de CO₂e (Módulo de Entrada)</p>
+    </div>
+    <div class="flex gap-3">
+        <div class="bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
+            <span class="text-xs text-slate-500 block">Total Rescatado</span>
+            <span class="text-sm font-bold text-emerald-700">{{ total_kg|floatformat:2 }} kg</span>
+        </div>
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 shadow-sm">
+            <span class="text-xs text-emerald-700 block">Mitigación Acumulada</span>
+            <span class="text-sm font-bold text-emerald-800">{{ total_co2|floatformat:2 }} kg CO₂e</span>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+    <h3 class="text-base font-semibold text-slate-800 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Nueva entrada de lote en almacén
+    </h3>
+    <form hx-post="/registrar-alimento/" hx-target="#tabla-registros" hx-swap="afterbegin"
+          hx-on::after-request="this.reset(); document.getElementById('fecha_input').value='{{ hoy }}';">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha de recepción</label>
+                <input type="date" id="fecha_input" name="fecha" value="{{ hoy }}" required
+                       class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Categoría de alimento</label>
+                <select name="categoria" required
+                        class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-emerald-600 outline-none">
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id }}">{{ cat.categoria }} ({{ cat.factor_kg_co2_por_kg }} kg CO₂e/kg)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Peso neto (kg)</label>
+                <input type="number" step="0.01" min="0.1" name="peso_kg" placeholder="Ej. 250.00" required
+                       class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Empresa Donante</label>
+                <input type="text" name="donante" placeholder="Ej. Supermercado Veracruz" required
+                       class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 outline-none">
+            </div>
+        </div>
+        <div class="flex flex-col md:flex-row gap-4 items-end">
+            <div class="flex-1 w-full">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Observaciones de trazabilidad (PEPS / Cadena de frío)</label>
+                <input type="text" name="observaciones" placeholder="Lote apto para consumo humano, desviado de vertedero..."
+                       class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 outline-none">
+            </div>
+            <div class="flex gap-2">
+                <button type="reset" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-100 transition cursor-pointer">
+                    Limpiar
+                </button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold shadow-sm transition cursor-pointer">
+                    + Agregar registro
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+        <h3 class="text-base font-semibold text-slate-800">Bitácora de registros capturados (PostgreSQL)</h3>
+        <span class="text-xs text-slate-400">Actualización asíncrona vía HTMX</span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <th class="py-3 px-4">Lote</th>
+                    <th class="py-3 px-4">Fecha</th>
+                    <th class="py-3 px-4">Categoría</th>
+                    <th class="py-3 px-4">Peso</th>
+                    <th class="py-3 px-4">CO₂e Evitado</th>
+                    <th class="py-3 px-4">Empresa Donante</th>
+                    <th class="py-3 px-4">Observaciones</th>
+                    <th class="py-3 px-4 text-right">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-registros" class="divide-y divide-slate-100 text-sm">
+                {% for registro in registros %}
+                    {% include 'partials/fila_registro.html' %}
+                {% empty %}
+                    <tr><td colspan="8" class="py-8 text-center text-slate-400">Aún no hay lotes registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

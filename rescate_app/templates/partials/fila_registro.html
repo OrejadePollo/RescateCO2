@@ -1,0 +1,22 @@
+<tr id="fila-{{ registro.id }}" class="hover:bg-slate-50/80 transition">
+    <td class="py-3 px-4 font-mono text-xs font-semibold text-slate-500">LOTE-{{ registro.id|stringformat:"04d" }}</td>
+    <td class="py-3 px-4 text-slate-600">{{ registro.fecha|date:"Y-m-d" }}</td>
+    <td class="py-3 px-4">
+        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+            {{ registro.categoria.categoria }}
+        </span>
+    </td>
+    <td class="py-3 px-4 font-medium">{{ registro.peso_kg }} kg</td>
+    <td class="py-3 px-4 font-bold text-emerald-700">{{ registro.co2_evitado|floatformat:2 }} kg CO₂e</td>
+    <td class="py-3 px-4 font-medium text-slate-800">{{ registro.donante }}</td>
+    <td class="py-3 px-4 text-slate-500 text-xs">{{ registro.observaciones|default:"—" }}</td>
+    <td class="py-3 px-4 text-right">
+        <button class="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition cursor-pointer"
+                hx-delete="/eliminar-registro/{{ registro.id }}/"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                hx-target="#fila-{{ registro.id }}"
+                hx-swap="outerHTML">
+            Eliminar
+        </button>
+    </td>
+</tr>
